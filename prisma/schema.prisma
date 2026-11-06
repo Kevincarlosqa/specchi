@@ -1,0 +1,789 @@
+// SPECCHi — esquema de datos. Reglas en docs/business-logic.md
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  BRANCH_MANAGER
+  RECEPTION
+  STYLIST
+}
+
+enum StylistLevel {
+  JUNIOR
+  SENIOR
+  MASTER
+}
+
+enum ServiceCategory {
+  RITUAL
+  COUPLE
+  MASSAGE
+  BODY
+  FACIAL
+  HYDRO
+  CUT
+  COLOR
+  STYLING
+  HAIR_CARE
+  NAILS
+  MAKEUP
+  BROWS_LASHES
+  WAX
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  YAPE
+  PLIN
+  TRANSFER
+  GIFT_CARD
+}
+
+enum DocType {
+  BOLETA
+  FACTURA
+  NOTA_VENTA
+}
+
+enum SaleStatus {
+  PAID
+  VOIDED
+}
+
+enum SaleItemKind {
+  SERVICE
+  PRODUCT
+  GIFT_CARD
+  PACKAGE
+}
+
+enum StockKind {
+  SALE
+  RESTOCK
+  ADJUST
+  INTERNAL
+}
+
+enum CashMovementKind {
+  IN
+  OUT
+}
+
+enum GiftCardStatus {
+  ACTIVE
+  REDEEMED
+  EXPIRED
+}
+
+enum CampaignStatus {
+  DRAFT
+  SENT
+}
+
+enum ReviewSource {
+  GOOGLE
+  INTERNAL
+}
+
+enum FieldType {
+  TEXT
+  BOOLEAN
+  SELECT
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum BookingChannel {
+  WHATSAPP
+  WEB
+  DASHBOARD
+  PHONE
+  WALK_IN
+}
+
+enum TimeOffKind {
+  VACATION
+  SICK
+  TRAINING
+  BLOCK
+}
+
+enum WaitlistStatus {
+  WAITING
+  NOTIFIED
+  BOOKED
+  EXPIRED
+  CANCELLED
+}
+
+enum ConversationStatus {
+  BOT
+  HUMAN
+  CLOSED
+}
+
+enum MessageDirection {
+  IN
+  OUT
+}
+
+enum MessageAuthor {
+  CUSTOMER
+  BOT
+  STAFF
+  SYSTEM
+}
+
+model Branch {
+  id                String   @id @default(cuid())
+  slug              String   @unique
+  name              String
+  district          String
+  city              String
+  address           String
+  reference         String?
+  lat               Float
+  lng               Float
+  phone             String
+  timezone          String   @default("America/Lima")
+  imageUrl          String?
+  stations          Int      @default(4)
+  slotIntervalMin   Int      @default(15)
+  minLeadMinutes    Int      @default(120)
+  maxDaysAhead      Int      @default(60)
+  cancelWindowHours Int      @default(24)
+  maxActiveBookings Int      @default(3)
+  noShowWarnAt      Int      @default(2)
+  noShowBlockAt     Int      @default(3)
+  active            Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  googleReviewUrl   String?
+  monthlyGoalCents  Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  hours        BranchHours[]
+  closures     BranchClosure[]
+  services     BranchService[]
+  schedules    StylistSchedule[]
+  timeOff      TimeOff[]
+  bookings     Booking[]
+  users        UserBranch[]
+  waitlist     WaitlistEntry[]
+  conversations Conversation[]
+  preferredBy  Customer[]      @relation("PreferredBranch")
+  sales        Sale[]
+  stock        ProductStock[]
+  stockMoves   StockMovement[]
+  cashSessions CashSession[]
+  attendance   Attendance[]
+  reviews      Review[]
+}
+
+/// Franja de apertura. Varias por día permitidas. Minutos desde medianoche local.
+model BranchHours {
+  id       String @id @default(cuid())
+  branchId String
+  weekday  Int // 0 = domingo … 6 = sábado
+  startMin Int
+  endMin   Int
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, weekday])
+}
+
+model BranchClosure {
+  id       String   @id @default(cuid())
+  branchId String
+  startsAt DateTime
+  endsAt   DateTime
+  reason   String
+  branch   Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, startsAt])
+}
+
+model Service {
+  id                  String          @id @default(cuid())
+  slug                String          @unique
+  name                String
+  category            ServiceCategory
+  description         String
+  durationMin         Int
+  priceCents          Int
+  priceFrom           Boolean         @default(false)
+  bufferMin           Int             @default(0)
+  processingOffsetMin Int?
+  processingMin       Int?
+  retouchAfterDays    Int?
+  requiresEvaluation  Boolean         @default(false)
+  active              Boolean         @default(true)
+  featured            Boolean         @default(false)
+  sortOrder           Int             @default(0)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  variants      ServiceVariant[]
+  branches      BranchService[]
+  stylists      StylistService[]
+  bookingItems  BookingItem[]
+  saleItems     SaleItem[]
+}
+
+model ServiceVariant {
+  id          String  @id @default(cuid())
+  serviceId   String
+  name        String
+  durationMin Int
+  priceCents  Int
+  sortOrder   Int     @default(0)
+  service     Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  bookingItems BookingItem[]
+}
+
+model BranchService {
+  id          String  @id @default(cuid())
+  branchId    String
+  serviceId   String
+  active      Boolean @default(true)
+  priceCents  Int?
+  durationMin Int?
+  branch      Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  service     Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, serviceId])
+}
+
+model Stylist {
+  id        String       @id @default(cuid())
+  slug      String       @unique
+  name      String
+  title     String
+  level     StylistLevel @default(SENIOR)
+  bio       String?
+  photoUrl  String?
+  instagram String?
+  active    Boolean      @default(true)
+  commissionPct Int      @default(40)
+  retailPct Int          @default(10)
+  monthlyGoalCents Int   @default(0)
+  createdAt DateTime     @default(now())
+
+  schedules     StylistSchedule[]
+  services      StylistService[]
+  timeOff       TimeOff[]
+  bookingItems  BookingItem[]
+  user          User?
+  technicalNotes TechnicalNote[]
+  waitlist      WaitlistEntry[]
+  preferredBy   Customer[]        @relation("PreferredStylist")
+  saleItems     SaleItem[]
+  attendance    Attendance[]
+  reviews       Review[]
+}
+
+/// Franja de trabajo de una especialista en una sede un día de la semana.
+model StylistSchedule {
+  id        String  @id @default(cuid())
+  stylistId String
+  branchId  String
+  weekday   Int
+  startMin  Int
+  endMin    Int
+  stylist   Stylist @relation(fields: [stylistId], references: [id], onDelete: Cascade)
+  branch    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, weekday])
+  @@index([stylistId, weekday])
+}
+
+model StylistService {
+  id          String  @id @default(cuid())
+  stylistId   String
+  serviceId   String
+  durationMin Int?
+  priceCents  Int?
+  stylist     Stylist @relation(fields: [stylistId], references: [id], onDelete: Cascade)
+  service     Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([stylistId, serviceId])
+}
+
+model TimeOff {
+  id        String      @id @default(cuid())
+  stylistId String
+  branchId  String?
+  kind      TimeOffKind @default(BLOCK)
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String?
+  stylist   Stylist     @relation(fields: [stylistId], references: [id], onDelete: Cascade)
+  branch    Branch?     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([stylistId, startsAt])
+}
+
+model Customer {
+  id                 String    @id @default(cuid())
+  phone              String    @unique
+  name               String?
+  email              String?
+  birthday           DateTime?
+  preferredBranchId  String?
+  preferredStylistId String?
+  skinType           String?
+  hairType           String?
+  allergies          String?
+  notes              String?
+  tags               String[]  @default([])
+  marketingOptIn     Boolean   @default(false)
+  marketingOptInAt   DateTime?
+  noShowCount        Int       @default(0)
+  loyaltyPoints      Int       @default(0)
+  customFields       Json?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  preferredBranch  Branch?         @relation("PreferredBranch", fields: [preferredBranchId], references: [id], onDelete: SetNull)
+  preferredStylist Stylist?        @relation("PreferredStylist", fields: [preferredStylistId], references: [id], onDelete: SetNull)
+  bookings         Booking[]
+  technicalNotes   TechnicalNote[]
+  waitlist         WaitlistEntry[]
+  conversations    Conversation[]
+  sales            Sale[]
+  loyalty          LoyaltyEntry[]
+  packages         CustomerPackage[]
+  reviews          Review[]
+}
+
+model TechnicalNote {
+  id         String   @id @default(cuid())
+  customerId String
+  stylistId  String?
+  title      String
+  formula    String?
+  body       String?
+  createdAt  DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  stylist    Stylist? @relation(fields: [stylistId], references: [id], onDelete: SetNull)
+
+  @@index([customerId, createdAt])
+}
+
+model Booking {
+  id                String         @id @default(cuid())
+  code              String         @unique
+  customerId        String
+  branchId          String
+  status            BookingStatus  @default(CONFIRMED)
+  channel           BookingChannel
+  startsAt          DateTime
+  endsAt            DateTime
+  totalCents        Int
+  notes             String?
+  internalNotes     String?
+  createdById       String?
+  confirmedAt       DateTime?
+  cancelledAt       DateTime?
+  cancelReason      String?
+  completedAt       DateTime?
+  reminder24hSentAt DateTime?
+  reminder2hSentAt  DateTime?
+  depositCents      Int            @default(0)
+  depositPaidAt     DateTime?
+  reviewRequestedAt DateTime?
+  rescheduledFromId String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  customer  Customer      @relation(fields: [customerId], references: [id])
+  branch    Branch        @relation(fields: [branchId], references: [id])
+  createdBy User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  items     BookingItem[]
+  sale      Sale?
+  reviews   Review[]
+
+  @@index([branchId, startsAt])
+  @@index([customerId, startsAt])
+  @@index([status, startsAt])
+}
+
+/// Un servicio dentro de una reserva. busyUntil incluye el buffer.
+model BookingItem {
+  id              String          @id @default(cuid())
+  bookingId       String
+  serviceId       String
+  variantId       String?
+  stylistId       String
+  position        Int
+  startsAt        DateTime
+  endsAt          DateTime
+  busyUntil       DateTime
+  processingStart DateTime?
+  processingEnd   DateTime?
+  durationMin     Int
+  priceCents      Int
+  booking         Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  service         Service         @relation(fields: [serviceId], references: [id])
+  variant         ServiceVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  stylist         Stylist         @relation(fields: [stylistId], references: [id])
+
+  @@index([stylistId, startsAt])
+}
+
+model WaitlistEntry {
+  id         String         @id @default(cuid())
+  customerId String
+  branchId   String
+  serviceIds String[]
+  stylistId  String?
+  dateFrom   DateTime
+  dateTo     DateTime
+  status     WaitlistStatus @default(WAITING)
+  notifiedAt DateTime?
+  notes      String?
+  createdAt  DateTime       @default(now())
+  customer   Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  branch     Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  stylist    Stylist?       @relation(fields: [stylistId], references: [id], onDelete: SetNull)
+
+  @@index([branchId, status])
+}
+
+model Conversation {
+  id             String             @id @default(cuid())
+  phone          String             @unique
+  customerId     String?
+  branchId       String?
+  status         ConversationStatus @default(BOT)
+  aiPaused       Boolean            @default(false)
+  assignedUserId String?
+  summary        String?
+  summaryUpTo    Int                @default(0)
+  unreadCount    Int                @default(0)
+  lastMessageAt  DateTime           @default(now())
+  lastInboundAt  DateTime?
+  isSimulator    Boolean            @default(false)
+  createdAt      DateTime           @default(now())
+  customer       Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  branch         Branch?            @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  assignedUser   User?              @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
+  messages       Message[]
+
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  conversationId String
+  direction      MessageDirection
+  author         MessageAuthor
+  type           String           @default("text")
+  body           String
+  payload        Json?
+  waMessageId    String?          @unique
+  status         String?
+  authorUserId   String?
+  createdAt      DateTime         @default(now())
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role
+  active       Boolean   @default(true)
+  stylistId    String?   @unique
+  lastLoginAt  DateTime?
+  totpSecret   String?
+  totpEnabledAt DateTime?
+  createdAt    DateTime  @default(now())
+  stylist      Stylist?  @relation(fields: [stylistId], references: [id], onDelete: SetNull)
+  branches     UserBranch[]
+  bookings     Booking[]
+  conversations Conversation[]
+  sales        Sale[]
+  audit        AuditLog[]
+  campaigns    Campaign[]
+}
+
+model UserBranch {
+  userId   String
+  branchId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@id([userId, branchId])
+}
+
+// ─── Caja y ventas ──────────────────────────────────────────────────────────
+
+model Sale {
+  id             String        @id @default(cuid())
+  docType        DocType       @default(BOLETA)
+  docNumber      String        @unique
+  status         SaleStatus    @default(PAID)
+  branchId       String
+  customerId     String?
+  bookingId      String?       @unique
+  userId         String?
+  cashSessionId  String?
+  giftCardId     String?
+  method         PaymentMethod
+  subtotalCents  Int
+  discountCents  Int           @default(0)
+  tipCents       Int           @default(0)
+  totalCents     Int
+  depositCents   Int           @default(0)
+  pointsEarned   Int           @default(0)
+  pointsRedeemed Int           @default(0)
+  createdAt      DateTime      @default(now())
+  branch         Branch        @relation(fields: [branchId], references: [id])
+  customer       Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  booking        Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  cashSession    CashSession?  @relation(fields: [cashSessionId], references: [id], onDelete: SetNull)
+  giftCard       GiftCard?     @relation(fields: [giftCardId], references: [id], onDelete: SetNull)
+  items          SaleItem[]
+
+  @@index([branchId, createdAt])
+  @@index([customerId, createdAt])
+}
+
+model SaleItem {
+  id              String       @id @default(cuid())
+  saleId          String
+  kind            SaleItemKind
+  name            String
+  serviceId       String?
+  productId       String?
+  stylistId       String?
+  qty             Int          @default(1)
+  unitCents       Int
+  totalCents      Int
+  commissionCents Int          @default(0)
+  sale            Sale         @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  service         Service?     @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  product         Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  stylist         Stylist?     @relation(fields: [stylistId], references: [id], onDelete: SetNull)
+
+  @@index([stylistId])
+  @@index([saleId])
+}
+
+model CashSession {
+  id            String         @id @default(cuid())
+  branchId      String
+  openedByName  String
+  closedByName  String?
+  openingCents  Int
+  countedCents  Int?
+  expectedCents Int?
+  note          String?
+  openedAt      DateTime       @default(now())
+  closedAt      DateTime?
+  branch        Branch         @relation(fields: [branchId], references: [id])
+  movements     CashMovement[]
+  sales         Sale[]
+
+  @@index([branchId, openedAt])
+}
+
+model CashMovement {
+  id          String           @id @default(cuid())
+  sessionId   String
+  kind        CashMovementKind
+  amountCents Int
+  reason      String
+  createdAt   DateTime         @default(now())
+  session     CashSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+// ─── Inventario (SPECCHi Store y consumo interno) ───────────────────────────
+
+model Product {
+  id         String          @id @default(cuid())
+  sku        String          @unique
+  name       String
+  brand      String
+  category   String
+  priceCents Int
+  costCents  Int
+  active     Boolean         @default(true)
+  featured   Boolean         @default(false)
+  createdAt  DateTime        @default(now())
+  stock      ProductStock[]
+  movements  StockMovement[]
+  saleItems  SaleItem[]
+}
+
+model ProductStock {
+  productId String
+  branchId  String
+  qty       Int     @default(0)
+  minQty    Int     @default(3)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  branch    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@id([productId, branchId])
+}
+
+model StockMovement {
+  id        String    @id @default(cuid())
+  productId String
+  branchId  String
+  delta     Int
+  kind      StockKind
+  note      String?
+  userName  String?
+  createdAt DateTime  @default(now())
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  branch    Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, createdAt])
+}
+
+// ─── Equipo ─────────────────────────────────────────────────────────────────
+
+model Attendance {
+  id        String    @id @default(cuid())
+  stylistId String
+  branchId  String
+  checkIn   DateTime
+  checkOut  DateTime?
+  stylist   Stylist   @relation(fields: [stylistId], references: [id], onDelete: Cascade)
+  branch    Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([stylistId, checkIn])
+  @@index([branchId, checkIn])
+}
+
+// ─── Fidelización ───────────────────────────────────────────────────────────
+
+model LoyaltyEntry {
+  id         String   @id @default(cuid())
+  customerId String
+  points     Int
+  reason     String
+  createdAt  DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
+}
+
+model GiftCard {
+  id            String         @id @default(cuid())
+  code          String         @unique
+  initialCents  Int
+  balanceCents  Int
+  buyerName     String?
+  recipientName String?
+  status        GiftCardStatus @default(ACTIVE)
+  expiresAt     DateTime
+  createdAt     DateTime       @default(now())
+  sales         Sale[]
+}
+
+model CustomerPackage {
+  id            String   @id @default(cuid())
+  customerId    String
+  name          String
+  totalSessions Int
+  usedSessions  Int      @default(0)
+  priceCents    Int
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([expiresAt])
+}
+
+// ─── Marketing y reputación ─────────────────────────────────────────────────
+
+model Campaign {
+  id           String         @id @default(cuid())
+  name         String
+  segment      String
+  message      String
+  status       CampaignStatus @default(DRAFT)
+  simulated    Boolean        @default(false)
+  audience     Int            @default(0)
+  delivered    Int            @default(0)
+  readCount    Int            @default(0)
+  booked       Int            @default(0)
+  revenueCents Int            @default(0)
+  createdById  String?
+  sentAt       DateTime?
+  createdAt    DateTime       @default(now())
+  createdBy    User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+}
+
+model Review {
+  id         String       @id @default(cuid())
+  branchId   String
+  customerId String?
+  stylistId  String?
+  bookingId  String?
+  source     ReviewSource @default(GOOGLE)
+  rating     Int
+  comment    String?
+  reply      String?
+  repliedAt  DateTime?
+  createdAt  DateTime     @default(now())
+  branch     Branch       @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  customer   Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  stylist    Stylist?     @relation(fields: [stylistId], references: [id], onDelete: SetNull)
+  booking    Booking?     @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([branchId, createdAt])
+}
+
+// ─── Ficha configurable y seguridad ─────────────────────────────────────────
+
+/// Campo personalizado de la ficha. El valor vive en Customer.customFields[key].
+model CustomerFieldDef {
+  id        String    @id @default(cuid())
+  key       String    @unique
+  label     String
+  type      FieldType @default(TEXT)
+  options   String[]  @default([])
+  sensitive Boolean   @default(false)
+  active    Boolean   @default(true)
+  sortOrder Int       @default(0)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userName  String
+  action    String
+  entity    String
+  detail    String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+}

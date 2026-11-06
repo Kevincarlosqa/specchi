@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+/* SPECCHi — sistema de diseño. Parte del malva y el crema del logo; orquídea, melocotón y lila le dan juventud. */
+@theme {
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-instrument), "Times New Roman", serif;
+  --font-brand: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ivory: #fff9f1;
+  --color-paper: #fffdf8;
+  --color-sand: #f8efe7;
+  --color-linen: #efe2da;
+  --color-nude: #cdb8b9;
+  --color-blush: #fbdfe9;
+  --color-rose: #c2337a;
+  --color-rose-deep: #9c2061;
+  --color-ink: #2a1025;
+  --color-ink-soft: #553a50;
+  --color-muted: #7d6577;
+  --color-line: #eee0da;
+  --color-mauve: #a98e94;
+  --color-lilac: #cdb9f3;
+  --color-peach: #ffbd99;
+  --color-butter: #ffe9b8;
+  --color-plum: #3d1636;
+  --color-violet: #6d4bd1;
+  --color-teal: #149a8b;
+  --color-coral: #f0824f;
+  --color-success: #12806f;
+  --color-warning: #a8660e;
+  --color-danger: #c22f45;
+
+  --ease-silk: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-curtain: cubic-bezier(0.76, 0, 0.24, 1);
+
+  --animate-marquee: marquee var(--marquee-duration, 40s) linear infinite;
+  @keyframes marquee {
+    to { transform: translateX(-50%); }
+  }
+  --animate-spin-slow: spin 18s linear infinite;
+}
+
+@layer base {
+  /* Red de seguridad: nada puede ensanchar la página en móvil. `clip` (no `hidden`) no rompe position: sticky. */
+  html, body { overflow-x: clip; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+  ::selection { background: var(--color-blush); color: var(--color-ink); }
+  :focus-visible {
+    outline: 2px solid var(--color-rose);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  button, [role="button"] { cursor: pointer; }
+}
+
+/* Si el JS no carga, el preloader se oculta solo. */
+@keyframes sp-pre-hide { to { visibility: hidden; opacity: 0; } }
+
+/* Con cursor propio se oculta el del sistema (solo puntero fino). */
+@media (pointer: fine) {
+  html.has-custom-cursor, html.has-custom-cursor * { cursor: none !important; }
+}
+
+/* Scroll interno (modales, listas, carriles): barra fina en lugar de la del sistema. */
+[data-lenis-prevent] {
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(42 16 37 / 0.3) transparent;
+}
+[data-lenis-prevent]::-webkit-scrollbar { width: 4px; height: 4px; }
+[data-lenis-prevent]::-webkit-scrollbar-track { background: transparent; }
+[data-lenis-prevent]::-webkit-scrollbar-thumb { background: rgb(42 16 37 / 0.3); border-radius: 999px; }
+[data-lenis-prevent]::-webkit-scrollbar-thumb:hover { background: rgb(42 16 37 / 0.65); }
+
+/* Para zonas donde la barra sobra (carriles horizontales con flechas o arrastre). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+@utility text-balance { text-wrap: balance; }
+
+/* Grano de película sutil sobre la landing */
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.07;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── SPECCHi: efectos propios ─────────────────────────────────────────── */
+
+@utility font-brand {
+  font-family: var(--font-brand);
+}
+
+/* Malla de color viva: los manchones se mueven lento detrás del contenido. */
+.mesh { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.mesh > i { position: absolute; display: block; border-radius: 999px; filter: blur(70px); will-change: transform; animation: mesh-float 22s ease-in-out infinite alternate; }
+@keyframes mesh-float {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6%, -8%, 0) scale(1.14); }
+  100% { transform: translate3d(-8%, 6%, 0) scale(0.94); }
+}
+
+/* Destello del espejo: una banda de luz que cruza la imagen. */
+.mirror-sheen { position: relative; overflow: hidden; isolation: isolate; }
+.mirror-sheen::after {
+  content: ""; position: absolute; inset: -30%; z-index: 2; pointer-events: none;
+  background: linear-gradient(112deg, transparent 42%, rgb(255 255 255 / 0.38) 49%, rgb(255 255 255 / 0.08) 53%, transparent 60%);
+  transform: translateX(-70%); animation: sheen 7s var(--ease-silk) infinite;
+}
+@keyframes sheen { 0%, 58% { transform: translateX(-70%); } 100% { transform: translateX(70%); } }
+
+/* Texto con degradado de la marca. */
+.text-gradient {
+  background: linear-gradient(100deg, var(--color-rose) 0%, var(--color-coral) 48%, var(--color-violet) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Panel: entrada de página y tarjeta con borde luminoso. */
+.dash-card { transition: transform .45s var(--ease-silk), box-shadow .45s var(--ease-silk), border-color .3s; }
+.dash-card:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -26px rgb(61 22 54 / 0.45); }
+
+.shimmer { position: relative; overflow: hidden; background: var(--color-sand); }
+.shimmer::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.65), transparent); animation: shimmer 1.4s infinite; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh > i, .mirror-sheen::after { animation: none; }
+}
+
+/* Barras que crecen al aparecer. */
+.grow-x { transform-origin: left; animation: grow-x 1s var(--ease-silk) both; }
+@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .grow-x { animation: none; } }
