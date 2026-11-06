@@ -83,8 +83,8 @@ export function ProposalPage() {
     <div>
       <header className="relative overflow-hidden px-5 pt-36 pb-16 md:px-10 md:pt-44 md:pb-24">
         <div className="mesh" aria-hidden>
-          <i style={{ width: "44vw", height: "44vw", right: "-10vw", top: "-16vw", background: "#cdb9f3", opacity: 0.8 }} />
-          <i style={{ width: "40vw", height: "40vw", left: "-8vw", bottom: "-20vw", background: "#f7a8c9", opacity: 0.7, animationDelay: "-8s" }} />
+          <i style={{ width: "44vw", height: "44vw", right: "-10vw", top: "-16vw", color: "#cdb9f3", opacity: 0.8 }} />
+          <i style={{ width: "40vw", height: "40vw", left: "-8vw", bottom: "-20vw", color: "#f7a8c9", opacity: 0.7, animationDelay: "-8s" }} />
         </div>
         <div className="relative mx-auto max-w-[1320px]">
           <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-rose uppercase">Propuesta para SPECCHi</p>

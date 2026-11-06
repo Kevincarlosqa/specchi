@@ -40,7 +40,7 @@ export function Nav({ whatsappHref }: { whatsappHref: string }) {
         Saltar al contenido
       </a>
       <motion.header animate={{ y: hidden && !reduced ? "-120%" : "0%" }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="fixed inset-x-0 top-3 z-50 px-3 md:top-4 md:px-6">
-        <nav aria-label="Principal" className={cn("mx-auto flex h-14 max-w-[1320px] items-center justify-between rounded-full pr-2 pl-5 transition-all duration-500 md:h-16 md:pl-7", scrolled || open ? "bg-paper/80 shadow-[0_12px_40px_-20px_rgba(61,22,54,.45)] backdrop-blur-xl" : "bg-transparent")}>
+        <nav aria-label="Principal" className={cn("mx-auto flex h-14 max-w-[1320px] items-center justify-between rounded-full pr-2 pl-5 transition-all duration-500 md:h-16 md:pl-7", scrolled || open ? "bg-paper/95 shadow-[0_12px_40px_-20px_rgba(61,22,54,.45)]" : "bg-transparent")}>
           <TLink href="/" aria-label="SPECCHi, inicio" className="text-[15px] md:text-base" onClick={() => setOpen(false)}>
             <Wordmark withMark />
           </TLink>
@@ -88,8 +88,8 @@ export function Nav({ whatsappHref }: { whatsappHref: string }) {
             aria-label="Menú"
           >
             <div className="mesh opacity-60" aria-hidden>
-              <i style={{ width: 360, height: 360, right: -80, top: 60, background: "#c2337a" }} />
-              <i style={{ width: 300, height: 300, left: -60, bottom: 40, background: "#6d4bd1", animationDelay: "-9s" }} />
+              <i style={{ width: 360, height: 360, right: -80, top: 60, color: "#c2337a" }} />
+              <i style={{ width: 300, height: 300, left: -60, bottom: 40, color: "#6d4bd1", animationDelay: "-9s" }} />
             </div>
             <ul className="relative space-y-1">
               {[...LINKS, { href: "/reservar", label: "Reservar" }, { href: "/login", label: "Panel" }].map((l, i) => (

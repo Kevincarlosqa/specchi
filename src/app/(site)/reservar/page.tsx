@@ -11,7 +11,7 @@ export default async function ReservarPage() {
   return (
     <section aria-labelledby="reservar-title" className="relative overflow-hidden bg-linear-to-br from-ivory via-blush/30 to-lilac/25">
       <div className="mesh" aria-hidden>
-        <i style={{ width: "38vw", height: "38vw", left: "-10vw", top: "-6vw", background: "#ffbd99", opacity: 0.6 }} />
+        <i style={{ width: "38vw", height: "38vw", left: "-10vw", top: "-6vw", color: "#ffbd99", opacity: 0.6 }} />
       </div>
       <div className="relative mx-auto grid max-w-[1320px] grid-cols-1 gap-10 px-4 pt-32 pb-24 md:px-10 md:pt-40 lg:grid-cols-[1fr_1.3fr] lg:gap-14 [&>*]:min-w-0">
         <div className="lg:sticky lg:top-32 lg:self-start">

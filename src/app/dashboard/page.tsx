@@ -80,8 +80,8 @@ export default async function DashboardHome({ searchParams }: PageProps<"/dashbo
         <div className="mt-4 grid gap-4 xl:grid-cols-[1.1fr_1fr]">
           <Card className="relative overflow-hidden border-0 bg-plum text-paper">
             <div className="mesh opacity-50" aria-hidden>
-              <i style={{ width: 280, height: 280, right: -60, top: -80, background: "#c2337a" }} />
-              <i style={{ width: 220, height: 220, left: -40, bottom: -90, background: "#6d4bd1", animationDelay: "-8s" }} />
+              <i style={{ width: 280, height: 280, right: -60, top: -80, color: "#c2337a" }} />
+              <i style={{ width: 220, height: 220, left: -40, bottom: -90, color: "#6d4bd1", animationDelay: "-8s" }} />
             </div>
             <div className="relative">
               <CardTitle className="[&_p]:text-paper/75" hint="Las acciones con más impacto, calculadas con tus datos de hoy">

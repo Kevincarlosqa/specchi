@@ -18,7 +18,7 @@ async function Form({ searchParams }: { searchParams: PageProps<"/login">["searc
 
 export default function LoginPage(props: PageProps<"/login">) {
   return (
-    <main className="grid min-h-dvh bg-ivory lg:grid-cols-[1.05fr_1fr]">
+    <main className="grid min-h-dvh bg-ivory lg:h-dvh lg:grid-cols-[1.05fr_1fr] lg:overflow-hidden">
       <section className="relative hidden overflow-hidden bg-plum text-paper lg:block">
         <Image src={unsplash(PHOTOS.heroLeft)} alt="" fill priority sizes="55vw" className="object-cover opacity-55" />
         <div className="absolute inset-0 bg-linear-to-t from-plum via-plum/30 to-plum/40" />
@@ -35,8 +35,8 @@ export default function LoginPage(props: PageProps<"/login">) {
           </div>
         </div>
       </section>
-      <section className="flex items-center justify-center px-4 py-14">
-        <div className="w-full max-w-md">
+      <section className="flex justify-center px-4 py-10 lg:overflow-y-auto lg:py-[7vh] lg:[scrollbar-gutter:stable]">
+        <div className="w-full max-w-lg">
           <LogoMark className="mb-6 h-10 w-10 text-rose lg:hidden" />
           {config.demoMode ? (
             <>

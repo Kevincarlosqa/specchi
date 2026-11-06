@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Users } from "lucide-react";
+import { NewCustomerButton } from "@/components/dashboard/customer-forms";
 import { Badge, Card, EmptyState, PageHeader, inputClass } from "@/components/dashboard/ui";
 import { customerScope, requireUser } from "@/lib/auth";
-import { getSelectedBranch } from "@/lib/dashboard";
+import { getSelectedBranch, visibleBranches } from "@/lib/dashboard";
 import { db } from "@/lib/prisma";
 import { formatLocal } from "@/lib/time";
 import { cn, formatMoney, initials } from "@/lib/utils";
@@ -27,7 +28,7 @@ export default async function ClientesPage({ searchParams }: PageProps<"/dashboa
       tag ? { tags: { has: tag } } : {},
     ],
   };
-  const [customers, total] = await Promise.all([
+  const [customers, total, branches] = await Promise.all([
     prisma.customer.findMany({
       where,
       include: {
@@ -39,11 +40,17 @@ export default async function ClientesPage({ searchParams }: PageProps<"/dashboa
       take: PAGE,
     }),
     prisma.customer.count({ where }),
+    visibleBranches(user),
   ]);
+  const canCreate = user.role !== "STYLIST";
 
   return (
     <>
-      <PageHeader title="Clientes" description={`${total.toLocaleString("es-PE")} clientes`} />
+      <PageHeader
+        title="Clientes"
+        description={`${total.toLocaleString("es-PE")} clientes`}
+        actions={canCreate ? <NewCustomerButton branches={branches.map((b) => ({ id: b.id, name: b.name }))} defaultBranchId={selected === "all" ? undefined : selected} /> : undefined}
+      />
       <form className="mb-4 flex flex-wrap gap-2" role="search">
         <input name="q" defaultValue={q} placeholder="Nombre, teléfono o correo" aria-label="Buscar cliente" className={cn(inputClass, "max-w-sm")} />
         <select name="tag" defaultValue={tag} aria-label="Etiqueta" className={cn(inputClass, "w-48")}>
@@ -56,7 +63,7 @@ export default async function ClientesPage({ searchParams }: PageProps<"/dashboa
       </form>
       {customers.length === 0 ? (
         <EmptyState title="Sin clientes" icon={<Users className="h-8 w-8" />}>
-          {q ? "No hay coincidencias para esa búsqueda." : "Las clientes aparecen al reservar."}
+          {q ? "No hay coincidencias para esa búsqueda." : canCreate ? "Aparecen al reservar, o créalas con «Nueva cliente»." : "Las clientes aparecen al reservar."}
         </EmptyState>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

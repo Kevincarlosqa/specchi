@@ -7,6 +7,7 @@ import { ArrowDown } from "lucide-react";
 import { LogoMark } from "@/components/brand/logo";
 import { PHOTOS, unsplash } from "@/content/images";
 import { Magnetic } from "./motion-kit";
+import { Particles } from "./particles";
 import { TLink } from "./transition";
 
 const SILK = [0.22, 1, 0.36, 1] as const;
@@ -24,7 +25,7 @@ function BigWord({ className }: { className: string }) {
 /** Sello giratorio con los años de la marca. */
 function Badge() {
   return (
-    <TLink href="/reservar" aria-label="Reservar una cita" data-cursor="Reservar" className="group relative flex h-28 w-28 items-center justify-center rounded-full bg-linear-to-br from-rose via-coral to-violet text-paper md:h-36 md:w-36">
+    <TLink href="/reservar" aria-label="Reservar una cita" className="group relative flex h-28 w-28 items-center justify-center rounded-full bg-linear-to-br from-rose via-coral to-violet text-paper md:h-36 md:w-36">
       <svg viewBox="0 0 200 200" className="absolute inset-0 h-full w-full animate-spin-slow" aria-hidden>
         <defs>
           <path id="badge-circle" d="M100,100 m-76,0 a76,76 0 1,1 152,0 a76,76 0 1,1 -152,0" />
@@ -103,9 +104,9 @@ function HeroScene({ desktop }: { desktop: boolean }) {
       <div className="sticky top-0 h-dvh overflow-hidden">
         {/* Malla de color */}
         <div className="mesh" aria-hidden>
-          <i style={{ width: "46vw", height: "46vw", left: "-8vw", top: "-14vw", background: "#ffbd99", opacity: 0.75 }} />
-          <i style={{ width: "42vw", height: "42vw", right: "-6vw", top: "-8vw", background: "#cdb9f3", opacity: 0.8, animationDelay: "-7s" }} />
-          <i style={{ width: "38vw", height: "38vw", left: "30vw", bottom: "-16vw", background: "#f7a8c9", opacity: 0.7, animationDelay: "-14s" }} />
+          <i style={{ width: "46vw", height: "46vw", left: "-8vw", top: "-14vw", color: "#ffbd99", opacity: 0.75 }} />
+          <i style={{ width: "42vw", height: "42vw", right: "-6vw", top: "-8vw", color: "#cdb9f3", opacity: 0.8, animationDelay: "-7s" }} />
+          <i style={{ width: "38vw", height: "38vw", left: "30vw", bottom: "-16vw", color: "#f7a8c9", opacity: 0.7, animationDelay: "-14s" }} />
         </div>
 
         {/* Espejos laterales */}
@@ -157,7 +158,7 @@ function HeroScene({ desktop }: { desktop: boolean }) {
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Magnetic>
-                  <TLink href="/reservar" className="inline-flex h-13 items-center rounded-full bg-paper px-8 text-sm font-semibold text-ink transition-colors hover:bg-peach">Agenda tu cita</TLink>
+                  <TLink href="/reservar" className="btn-shine inline-flex h-13 items-center rounded-full bg-paper px-8 text-sm font-semibold text-ink transition-colors hover:bg-peach">Agenda tu cita</TLink>
                 </Magnetic>
                 <TLink href="/spa" className="inline-flex h-13 items-center rounded-full border border-paper/50 px-8 text-sm font-semibold transition-colors hover:bg-paper/10">Ver la carta de spa</TLink>
               </div>
@@ -166,12 +167,14 @@ function HeroScene({ desktop }: { desktop: boolean }) {
           </motion.div>
         </motion.div>
 
+        <Particles colors={["#c2337a", "#f0824f", "#6d4bd1"]} count={38} glints={0.35} opacity={0.8} />
+
         {/* Pie inicial */}
         <motion.div style={{ opacity: introOpacity }} className="pointer-events-none absolute inset-x-0 bottom-6 mx-auto flex max-w-[1320px] items-end justify-between px-5 md:px-10">
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="hidden max-w-[12rem] rounded-2xl bg-paper/70 p-3 text-xs leading-snug backdrop-blur md:block">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="hidden max-w-[12rem] rounded-2xl bg-paper/85 p-3 text-xs leading-snug md:block">
             Peluquería, spa y wellness. Seis sedes en Lima.
           </motion.p>
-          <motion.p animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }} className="mx-auto flex items-center gap-1.5 rounded-full bg-paper/80 px-3 py-1.5 text-xs font-semibold backdrop-blur md:mx-0">
+          <motion.p animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }} className="mx-auto flex items-center gap-1.5 rounded-full bg-paper/90 px-3 py-1.5 text-xs font-semibold md:mx-0">
             Desliza para abrir el espejo <ArrowDown className="h-3.5 w-3.5" aria-hidden />
           </motion.p>
         </motion.div>

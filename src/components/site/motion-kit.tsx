@@ -13,7 +13,7 @@ import {
   useVelocity,
   type MotionValue,
 } from "motion/react";
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -236,52 +236,5 @@ export function Strands({ className, flip = false }: { className?: string; flip?
       ))}
     </svg>
     </div>
-  );
-}
-
-/** Cursor personalizado: punto + anillo que crece sobre elementos interactivos. Solo con mouse. */
-const noopSubscribe = () => () => {};
-const finePointer = () => window.matchMedia("(pointer: fine)").matches && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-export function Cursor() {
-  const enabled = useSyncExternalStore(noopSubscribe, finePointer, () => false);
-  const [hovering, setHovering] = useState(false);
-  const [label, setLabel] = useState<string | null>(null);
-  const x = useMotionValue(-100);
-  const y = useMotionValue(-100);
-  const rx = useSpring(x, { stiffness: 300, damping: 30, mass: 0.6 });
-  const ry = useSpring(y, { stiffness: 300, damping: 30, mass: 0.6 });
-
-  useEffect(() => {
-    if (!enabled) return;
-    document.documentElement.classList.add("has-custom-cursor");
-    const move = (e: PointerEvent) => {
-      x.set(e.clientX);
-      y.set(e.clientY);
-      const el = (e.target as HTMLElement).closest<HTMLElement>("a, button, [data-cursor], input, select, textarea, label");
-      setHovering(Boolean(el));
-      setLabel(el?.dataset.cursor ?? null);
-    };
-    window.addEventListener("pointermove", move);
-    return () => {
-      window.removeEventListener("pointermove", move);
-      document.documentElement.classList.remove("has-custom-cursor");
-    };
-  }, [enabled, x, y]);
-
-  if (!enabled) return null;
-  return (
-    <>
-      <motion.div className="pointer-events-none fixed top-0 left-0 z-[100] h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink" style={{ x, y }} aria-hidden />
-      <motion.div
-        className="pointer-events-none fixed top-0 left-0 z-[100] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-ink/50 text-[10px] font-semibold tracking-widest text-paper uppercase mix-blend-normal"
-        style={{ x: rx, y: ry }}
-        animate={{ width: label ? 84 : hovering ? 52 : 30, height: label ? 84 : hovering ? 52 : 30, backgroundColor: label ? "rgba(194,51,122,0.95)" : "rgba(194,51,122,0)" }}
-        transition={{ type: "spring", stiffness: 300, damping: 24 }}
-        aria-hidden
-      >
-        {label}
-      </motion.div>
-    </>
   );
 }

@@ -47,7 +47,7 @@ export function StorePage({ products, whatsapp, demo }: { products: LandingData[
               const tone = BRAND_TONES[brands.indexOf(p.brand) % BRAND_TONES.length];
               return (
                 <motion.li key={p.id} layout initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-                  <a href={waLink(whatsapp, `Hola, me interesa ${p.brand} ${p.name}. ¿Lo tienen disponible?`)} target="_blank" rel="noopener noreferrer" className="group block" data-cursor="Pedir">
+                  <a href={waLink(whatsapp, `Hola, me interesa ${p.brand} ${p.name}. ¿Lo tienen disponible?`)} target="_blank" rel="noopener noreferrer" className="group block">
                     <div className={cn("relative flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-[2rem] bg-linear-to-br p-5 transition-transform duration-700 ease-out group-hover:-translate-y-1", tone)}>
                       <span className="text-[11px] font-semibold tracking-[0.2em] text-ink-soft uppercase">{p.category}</span>
                       <LogoMark className="absolute -right-8 -bottom-8 h-44 w-44 text-paper/50 transition-transform duration-[1200ms] ease-out group-hover:rotate-90" title="" />
@@ -67,7 +67,7 @@ export function StorePage({ products, whatsapp, demo }: { products: LandingData[
 
       <section id="gift-cards" aria-labelledby="gift-title" className="relative overflow-hidden bg-plum text-paper">
         <div className="mesh opacity-60" aria-hidden>
-          <i style={{ width: 560, height: 560, right: "-8%", top: "-30%", background: "#c2337a" }} />
+          <i style={{ width: 560, height: 560, right: "-8%", top: "-30%", color: "#c2337a" }} />
         </div>
         <div className="relative mx-auto max-w-[1320px] px-5 py-24 md:px-10 md:py-32">
           <p className="mb-4 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-peach uppercase"><Gift className="h-4 w-4" aria-hidden /> Gift cards</p>

@@ -188,7 +188,7 @@ export function BookingWidget({ branches }: Pick<LandingData, "branches">) {
 
       <div>
         <p className="mb-2 text-xs font-semibold text-ink-soft">3 · Día</p>
-        <div className="scrollbar-none -mx-1 flex min-h-[68px] gap-2 overflow-x-auto px-1 pb-1" data-lenis-prevent>
+        <div className="scrollbar-none -mx-1 flex min-h-[68px] gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1" data-lenis-prevent-horizontal>
           {days.map((d) => (
             <button
               key={d.key}

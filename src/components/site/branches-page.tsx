@@ -25,8 +25,8 @@ export function BranchesPage({ branches }: Pick<LandingData, "branches">) {
     <div>
       <header className="relative overflow-hidden px-5 pt-36 pb-12 md:px-10 md:pt-44">
         <div className="mesh" aria-hidden>
-          <i style={{ width: "42vw", height: "42vw", right: "-8vw", top: "-16vw", background: "#ffbd99", opacity: 0.7 }} />
-          <i style={{ width: "36vw", height: "36vw", left: "-6vw", top: "-6vw", background: "#cdb9f3", opacity: 0.7, animationDelay: "-8s" }} />
+          <i style={{ width: "42vw", height: "42vw", right: "-8vw", top: "-16vw", color: "#ffbd99", opacity: 0.7 }} />
+          <i style={{ width: "36vw", height: "36vw", left: "-6vw", top: "-6vw", color: "#cdb9f3", opacity: 0.7, animationDelay: "-8s" }} />
         </div>
         <div className="relative mx-auto max-w-[1320px]">
           <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-rose uppercase">Sedes</p>

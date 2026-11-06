@@ -1,15 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion, useInView, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
-import { useRef, useState } from "react";
+import { AnimatePresence, motion, useInView, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "motion/react";
+import { useMemo, useRef, useState } from "react";
 import { ArrowUpRight, Check, MapPin } from "lucide-react";
 import { LogoMark } from "@/components/brand/logo";
-import { CATEGORY_PHOTOS, PHOTOS, unsplash } from "@/content/images";
+import { CATEGORY_PHOTOS, PHOTOS, unsplash, type Photo } from "@/content/images";
 import type { LandingData } from "@/lib/landing";
+import { CATEGORY_LABELS, SALON_CATEGORIES, SPA_CATEGORIES } from "@/lib/labels";
 import { cn, formatMoney } from "@/lib/utils";
 import { waLink } from "./icons";
 import { Counter, FadeUp, RevealLines, ScrollFillText, VelocityMarquee } from "./motion-kit";
+import { Particles } from "./particles";
 import { RevealPhoto } from "./photo";
 import { TLink } from "./transition";
 
@@ -34,7 +36,6 @@ export function Marquee() {
 
 /** Spa y salón: dos paneles que se expanden al pasar el cursor. */
 export function Worlds({ spaCount, salonCount }: { spaCount: number; salonCount: number }) {
-  const [hover, setHover] = useState<"spa" | "salon" | null>(null);
   const worlds = [
     { key: "spa" as const, href: "/spa", title: "Spa", tag: "Baja las revoluciones", text: "Rituales, masajes, faciales e hidroterapia en el Swissôtel.", photo: PHOTOS.massageOil, count: spaCount, tone: "from-plum/80" },
     { key: "salon" as const, href: "/salon", title: "Salón", tag: "Cambia de aire", text: "Corte, color, peinado, uñas, cejas y maquillaje en cinco sedes.", photo: PHOTOS.curls, count: salonCount, tone: "from-rose-deep/80" },
@@ -45,24 +46,25 @@ export function Worlds({ spaCount, salonCount }: { spaCount: number; salonCount:
         <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-rose uppercase">Dos mundos, un mismo cuidado</p>
         <RevealLines lines={["¿Hoy qué te", <em key="e" className="text-gradient pr-2">pide el cuerpo?</em>]} className="font-display text-[clamp(2.8rem,7vw,6.5rem)] leading-[0.95]" />
       </div>
-      <div className="flex h-[78vh] min-h-[560px] flex-col gap-3 md:h-[74vh] md:flex-row">
+      <div className="group/worlds @container flex h-[78vh] min-h-[560px] flex-col gap-3 md:h-[74vh] md:flex-row">
         {worlds.map((w) => (
           <TLink
             key={w.key}
             href={w.href}
-            onPointerEnter={() => setHover(w.key)}
-            onPointerLeave={() => setHover(null)}
-            data-cursor={w.title}
-            className={cn("group relative block min-h-0 overflow-hidden rounded-[2.5rem] transition-[flex-grow] duration-700 ease-[cubic-bezier(.22,1,.36,1)]", hover === w.key ? "grow-[1.7]" : "grow")}
-            style={{ flexBasis: 0 }}
+            className="group relative block min-h-0 flex-1 overflow-hidden rounded-[2.5rem] transition-[flex-grow] duration-700 ease-[cubic-bezier(.22,1,.36,1)] [contain:layout_paint] md:hover:grow-[1.7] md:focus-visible:grow-[1.7]"
           >
-            <Image src={unsplash(w.photo)} alt={w.photo.alt} fill sizes="(min-width: 768px) 70vw, 100vw" className="object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105" />
+            {/* Ancho fijo (el del panel ya abierto) y centrada: al crecer el panel se descubre más foto, sin reescalarla. */}
+            <span className="absolute inset-0 transition-[scale] duration-[1400ms] ease-out will-change-transform group-hover:scale-105 md:right-auto md:left-1/2 md:w-[64cqw] md:-translate-x-1/2">
+              <Image src={unsplash(w.photo)} alt={w.photo.alt} fill sizes="(min-width: 768px) 64vw, 100vw" className="object-cover" />
+            </span>
             <span className={cn("absolute inset-0 bg-linear-to-t via-transparent to-transparent", w.tone)} />
+            {/* Al elegir un mundo, el otro se apaga un poco. */}
+            <span className="absolute inset-0 bg-ink/45 opacity-0 transition-opacity duration-700 group-hover/worlds:opacity-100 group-hover:!opacity-0" />
             <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-6 text-paper md:p-9">
-              <span>
+              <span className="transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:-translate-y-2">
                 <span className="mb-1 block text-xs font-semibold tracking-[0.25em] uppercase">{w.tag}</span>
                 <span className="block font-display text-7xl leading-none md:text-8xl">{w.title}</span>
-                <span className="mt-3 block max-w-sm text-sm opacity-90">{w.text}</span>
+                <span className="mt-3 block max-w-sm text-sm opacity-90 md:w-72">{w.text}</span>
                 <span className="mt-2 block text-xs font-semibold opacity-80">{w.count} servicios en carta</span>
               </span>
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-paper text-ink transition-transform duration-500 group-hover:rotate-45"><ArrowUpRight className="h-6 w-6" aria-hidden /></span>
@@ -88,12 +90,17 @@ export function Rituals({ services }: { services: Service[] }) {
           <h2 id="rituales" className="font-display text-[clamp(2.6rem,5.6vw,5.4rem)] leading-[0.95]">Rituales para <em className="text-rose">perder la noción del tiempo</em></h2>
           <TLink href="/spa" className="inline-flex items-center gap-1 text-sm font-semibold underline-offset-4 hover:underline">Toda la carta <ArrowUpRight className="h-4 w-4" aria-hidden /></TLink>
         </div>
-        <motion.ul style={reduced ? undefined : { x }} className="scrollbar-none flex gap-4 overflow-x-auto px-5 max-lg:!transform-none md:px-10 lg:w-max lg:overflow-visible" data-lenis-prevent>
+        <motion.ul style={reduced ? undefined : { x }} className="scrollbar-none flex gap-4 overflow-x-auto px-5 overscroll-x-contain max-lg:!transform-none md:px-10 lg:w-max lg:overflow-visible" data-lenis-prevent-horizontal>
           {services.map((s, i) => (
             <li key={s.id} className="w-[78vw] shrink-0 sm:w-[46vw] lg:w-[27vw]">
-              <TLink href={`/reservar?servicio=${s.id}`} className="group block" data-cursor="Reservar">
+              <TLink href={`/reservar?servicio=${s.id}`} className="group block">
                 <div className="relative h-[52vh] overflow-hidden rounded-t-[999px] lg:h-[56vh]">
                   <Image src={unsplash(photos[i % photos.length]!)} alt={photos[i % photos.length]!.alt} fill sizes="(min-width: 1024px) 28vw, 78vw" className="object-cover transition-transform duration-[1300ms] ease-out group-hover:scale-110" />
+                  <span className="absolute inset-x-0 bottom-5 flex justify-center">
+                    <span className="inline-flex h-10 translate-y-3 items-center gap-1.5 rounded-full bg-paper px-5 text-xs font-semibold tracking-wide text-ink opacity-0 shadow-[0_12px_30px_-14px_rgba(42,16,37,.7)] transition-[opacity,transform] duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 pointer-coarse:translate-y-0 pointer-coarse:opacity-100">
+                      Reservar <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-500 group-hover:rotate-45" aria-hidden />
+                    </span>
+                  </span>
                 </div>
                 <div className="mt-4 flex items-start justify-between gap-3">
                   <div>
@@ -116,9 +123,10 @@ export function Manifesto({ branches, services, brands }: { branches: number; se
   return (
     <section aria-label="Nuestra historia" className="relative overflow-hidden bg-plum text-paper">
       <div className="mesh opacity-60" aria-hidden>
-        <i style={{ width: 620, height: 620, left: "-10%", top: "-20%", background: "#9c2061" }} />
-        <i style={{ width: 520, height: 520, right: "-8%", bottom: "-20%", background: "#6d4bd1", animationDelay: "-10s" }} />
+        <i style={{ width: 620, height: 620, left: "-10%", top: "-20%", color: "#9c2061" }} />
+        <i style={{ width: 520, height: 520, right: "-8%", bottom: "-20%", color: "#6d4bd1", animationDelay: "-10s" }} />
       </div>
+      <Particles colors={["#ffbd99", "#cdb9f3", "#ffe9b8", "#fffdf8"]} count={55} glints={0.3} opacity={0.85} />
       <div className="relative mx-auto max-w-[1320px] px-5 py-28 md:px-10 md:py-40">
         <p className="mb-8 text-xs font-semibold tracking-[0.3em] text-peach uppercase">Specchi: «espejos», en italiano</p>
         <ScrollFillText
@@ -312,6 +320,140 @@ export function BranchStrip({ branches }: { branches: LandingData["branches"] })
   );
 }
 
+/** Índice de la carta: cada categoría con cuántos servicios tiene y desde cuánto, leído del catálogo real. */
+export function ServiceIndex({ services }: { services: Service[] }) {
+  const groups = useMemo(() => {
+    const row = (category: Service["category"]) => {
+      const list = services.filter((s) => s.category === category);
+      return list.length ? { category, count: list.length, from: Math.min(...list.map((s) => s.basePriceCents)) } : null;
+    };
+    return [
+      { title: "Spa", href: "/spa", rows: SPA_CATEGORIES.map(row).filter((r) => r !== null) },
+      { title: "Salón", href: "/salon", rows: SALON_CATEGORIES.map(row).filter((r) => r !== null) },
+    ];
+  }, [services]);
+  const all = groups.flatMap((g) => g.rows);
+  const [active, setActive] = useState(all[0]?.category);
+  return (
+    <section aria-labelledby="carta" className="mx-auto max-w-[1320px] px-5 pb-24 md:px-10 md:pb-32">
+      <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-rose uppercase">La carta, de un vistazo</p>
+          <h2 id="carta" className="font-display text-[clamp(2.6rem,5.6vw,5.4rem)] leading-[0.95]">Todo lo que <em className="text-gradient pr-2">sabemos hacer</em></h2>
+        </div>
+        <p className="max-w-sm text-ink-soft">Del corte de siempre a un ritual de varias horas. Con precios a la vista, para que elijas con calma.</p>
+      </div>
+      <div className="grid gap-12 lg:grid-cols-[1.45fr_0.75fr]">
+        <div className="grid gap-10 md:grid-cols-2 md:gap-8">
+          {groups.map((g, gi) => (
+            <FadeUp key={g.title} delay={gi * 0.12}>
+              <h3 className="mb-2 text-xs font-semibold tracking-[0.25em] text-muted uppercase">{g.title}</h3>
+              <ul className="border-t border-ink/15">
+                {g.rows.map((r) => (
+                  <li key={r.category} className="border-b border-ink/15">
+                    <TLink href={g.href} onPointerEnter={() => setActive(r.category)} onFocus={() => setActive(r.category)} className="flex items-baseline justify-between gap-3 py-3.5">
+                      <span className={cn("font-display text-3xl leading-tight transition-[color,transform] duration-500 ease-[cubic-bezier(.22,1,.36,1)]", active === r.category ? "translate-x-1.5 text-rose italic" : "")}>{CATEGORY_LABELS[r.category]}</span>
+                      <span className="shrink-0 text-right text-xs text-muted tabular-nums">
+                        {r.count} · desde {formatMoney(r.from)}
+                      </span>
+                    </TLink>
+                  </li>
+                ))}
+              </ul>
+            </FadeUp>
+          ))}
+        </div>
+        {/* Vista previa: las fotos se apilan y solo cambia su opacidad. */}
+        <div className="hidden lg:block">
+          <div className="sticky top-28">
+            <div className="relative h-[68vh] max-h-[620px] overflow-hidden rounded-t-[999px] bg-blush">
+              {all.map((r) => (
+                <Image key={r.category} src={unsplash(CATEGORY_PHOTOS[r.category])} alt="" fill sizes="26vw" className={cn("object-cover transition-[opacity,transform] duration-700 ease-out", active === r.category ? "scale-100 opacity-100" : "scale-105 opacity-0")} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function GalleryColumn({ photos, y, className }: { photos: Photo[]; y: MotionValue<string>; className?: string }) {
+  return (
+    <motion.div style={{ y }} className={cn("flex flex-col gap-4 will-change-transform md:gap-6", className)}>
+      {photos.map((p, i) => (
+        <div key={p.id} className={cn("relative aspect-[3/4] overflow-hidden bg-blush", i % 2 ? "rounded-t-3xl rounded-b-[999px]" : "rounded-t-[999px] rounded-b-3xl")}>
+          <Image src={unsplash(p)} alt={p.alt} fill sizes="(min-width: 768px) 30vw, 46vw" className="object-cover" />
+        </div>
+      ))}
+    </motion.div>
+  );
+}
+
+/** Galería: tres columnas de espejos que se deslizan a distinta velocidad con el scroll. */
+export function MirrorGallery() {
+  const ref = useRef<HTMLElement>(null);
+  const reduced = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const slow = useTransform(scrollYProgress, [0, 1], reduced ? ["0%", "0%"] : ["5%", "-7%"]);
+  const fast = useTransform(scrollYProgress, [0, 1], reduced ? ["0%", "0%"] : ["14%", "-16%"]);
+  return (
+    <section ref={ref} aria-labelledby="galeria" className="relative overflow-hidden py-24 md:py-36">
+      <div className="relative mx-auto mb-14 max-w-[1320px] px-5 md:mb-20 md:px-10">
+        <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-rose uppercase">Specchi, «espejos»</p>
+        <h2 id="galeria" className="font-display text-[clamp(2.8rem,7vw,6.5rem)] leading-[0.95]">Un espejo para <em className="text-gradient pr-2">cada versión de ti</em></h2>
+      </div>
+      <div className="relative mx-auto grid max-w-[1320px] grid-cols-2 gap-4 px-5 md:grid-cols-3 md:gap-6 md:px-10">
+        <GalleryColumn y={slow} photos={[PHOTOS.makeup, PHOTOS.nailsMinimal]} />
+        <GalleryColumn y={fast} photos={[PHOTOS.citrus, PHOTOS.blowDry]} className="mt-16 md:mt-28" />
+        <GalleryColumn y={slow} photos={[PHOTOS.mask, PHOTOS.hairWash]} className="hidden md:flex" />
+      </div>
+      <Particles colors={["#c2337a", "#f0824f", "#6d4bd1", "#fffdf8"]} count={30} glints={0.4} opacity={0.8} />
+    </section>
+  );
+}
+
+const JOURNEY = [
+  { title: "Te avisamos", text: "Un recordatorio por WhatsApp 24 horas y otro 2 horas antes, con botones para confirmar, reprogramar o cancelar." },
+  { title: "Te conocemos", text: "Tu ficha guarda tu fórmula de color, tus alergias y tu tipo de piel o cabello. No tienes que repetirlo." },
+  { title: "Sin sorpresas", text: "El precio que viste al reservar queda fijo en tu cita, aunque la carta cambie después." },
+  { title: "Te seguimos", text: "Si tu servicio necesita retoque, como el microblading a los 40 días, te sugerimos la fecha." },
+];
+
+/** Después de reservar: cuatro pasos unidos por una línea que avanza con el scroll. */
+export function Journey() {
+  const ref = useRef<HTMLOListElement>(null);
+  const reduced = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 85%", "end 55%"] });
+  const progress = useTransform(scrollYProgress, [0, 1], reduced ? [1, 1] : [0, 1]);
+  return (
+    <section aria-labelledby="visita" className="bg-sand/60">
+      <div className="mx-auto max-w-[1320px] px-5 py-24 md:px-10 md:py-32">
+        <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-rose uppercase">Después de reservar</p>
+        <h2 id="visita" className="font-display text-[clamp(2.6rem,5.6vw,5.4rem)] leading-[0.95]">Nos encargamos <em className="text-gradient pr-2">de lo demás</em></h2>
+        <div className="relative mt-14 pl-8 md:pt-10 md:pl-0">
+          {/* Línea: vertical en móvil, horizontal en escritorio. Solo escala, no recalcula nada. */}
+          <span className="absolute top-2 bottom-2 left-[5px] w-px bg-ink/15 md:inset-x-0 md:top-[5px] md:bottom-auto md:h-px md:w-auto" aria-hidden />
+          <motion.span style={{ scaleY: progress }} className="absolute top-2 bottom-2 left-[5px] w-px origin-top bg-rose md:hidden" aria-hidden />
+          <motion.span style={{ scaleX: progress }} className="absolute inset-x-0 top-[5px] hidden h-px origin-left bg-rose md:block" aria-hidden />
+          <ol ref={ref} className="grid gap-10 md:grid-cols-4 md:gap-8">
+            {JOURNEY.map((step, i) => (
+              <li key={step.title} className="relative">
+                <span className="absolute top-2 -left-8 h-[11px] w-[11px] rounded-full bg-rose ring-4 ring-sand md:-top-10 md:left-0" aria-hidden />
+                <FadeUp delay={i * 0.1}>
+                  <p className="font-display text-5xl leading-none text-rose/70 italic">{i + 1}</p>
+                  <h3 className="mt-3 font-display text-3xl leading-tight">{step.title}</h3>
+                  <p className="mt-2 max-w-xs text-sm leading-relaxed text-ink-soft">{step.text}</p>
+                </FadeUp>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /** Mosaico final que invita a reservar. */
 export function FinalCta() {
   const ref = useRef<HTMLDivElement>(null);
@@ -327,10 +469,11 @@ export function FinalCta() {
             </motion.div>
           ))}
         </div>
+        <Particles colors={["#fffdf8", "#c2337a", "#6d4bd1"]} count={32} glints={0.4} opacity={0.85} />
         <div className="relative">
           <h2 className="font-display text-[clamp(3rem,9vw,8.5rem)] leading-[0.9]">Te toca a <em>ti</em></h2>
           <p className="mx-auto mt-4 max-w-sm text-ink-soft">Elige sede, servicio y hora con la agenda real. Es cuestión de un minuto.</p>
-          <TLink href="/reservar" className="mt-7 inline-flex h-14 items-center rounded-full bg-ink px-9 text-sm font-semibold text-paper transition-transform duration-300 hover:scale-105">Agenda tu cita</TLink>
+          <TLink href="/reservar" className="btn-shine mt-7 inline-flex h-14 items-center rounded-full bg-ink px-9 text-sm font-semibold text-paper transition-transform duration-300 hover:scale-105">Agenda tu cita</TLink>
         </div>
       </div>
     </section>

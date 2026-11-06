@@ -1,5 +1,5 @@
 import { Hero } from "@/components/site/hero";
-import { BranchStrip, ChatDemo, FinalCta, Manifesto, Marquee, Rituals, StoreTeaser, Worlds } from "@/components/site/home-sections";
+import { BranchStrip, ChatDemo, FinalCta, Journey, Manifesto, Marquee, MirrorGallery, Rituals, ServiceIndex, StoreTeaser, Worlds } from "@/components/site/home-sections";
 import { waLink } from "@/components/site/icons";
 import { Preloader } from "@/components/site/preloader";
 import { config } from "@/lib/config";
@@ -32,10 +32,13 @@ export default async function Home() {
       <Hero />
       <Marquee />
       <Worlds spaCount={spa.length} salonCount={salon.length} />
+      <ServiceIndex services={data.services} />
       <Rituals services={spa.filter((s) => s.category === "RITUAL" || s.slug === "couple-experience")} />
       <Manifesto branches={data.branches.length} services={data.services.length} brands={new Set(data.products.map((p) => p.brand)).size} />
+      <MirrorGallery />
       <StoreTeaser products={data.products} />
       <ChatDemo whatsappHref={waLink(config.WHATSAPP_PUBLIC_NUMBER)} />
+      <Journey />
       <BranchStrip branches={data.branches} />
       <FinalCta />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />

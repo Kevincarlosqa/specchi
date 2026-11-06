@@ -12,6 +12,7 @@ import { customerPhone, insideWindow, notifyWaitlist, sendOutbound } from "@/lib
 import { BRANCH_COOKIE } from "@/lib/dashboard";
 import { db } from "@/lib/prisma";
 import { formatLocal, humanDateTime } from "@/lib/time";
+import { normalizePhone } from "@/lib/utils";
 
 export type ActionResult<T = undefined> =
   | { ok: true; data?: T; message?: string }
@@ -221,6 +222,43 @@ export async function updateCustomer(customerId: string, input: z.input<typeof c
       },
     });
   }, "Ficha guardada");
+}
+
+const newCustomerSchema = z.object({
+  name: z.string().trim().min(2, "Escribe el nombre").max(80),
+  phone: z.string().trim().min(1, "Escribe el teléfono"),
+  email: z.union([z.email("Correo inválido"), z.literal("")]).optional(),
+  branchId: z.string().min(1, "Elige una sede"),
+  allergies: z.string().max(300).optional(),
+  notes: z.string().max(2000).optional(),
+  marketingOptIn: z.boolean().optional(),
+});
+
+/** Alta manual. La sede queda como preferida: es lo que la hace visible para el equipo de esa sede. */
+export async function createCustomer(input: z.input<typeof newCustomerSchema>) {
+  return run(async () => {
+    const user = await assertUser([...STAFF_ROLES]);
+    const d = newCustomerSchema.parse(input);
+    if (!canAccessBranch(user, d.branchId)) throw new ForbiddenError("No tienes acceso a esa sede.");
+    const phone = normalizePhone(d.phone);
+    if (!phone) throw new ForbiddenError("El teléfono no es válido.");
+    const prisma = await db();
+    if (await prisma.customer.findUnique({ where: { phone }, select: { id: true } })) throw new ForbiddenError("Ya existe una cliente con ese teléfono.");
+    const customer = await prisma.customer.create({
+      data: {
+        phone,
+        name: d.name,
+        email: d.email || null,
+        preferredBranchId: d.branchId,
+        allergies: d.allergies || null,
+        notes: d.notes || null,
+        marketingOptIn: d.marketingOptIn ?? false,
+        marketingOptInAt: d.marketingOptIn ? new Date() : null,
+      },
+      select: { id: true },
+    });
+    return customer.id;
+  }, "Cliente creada");
 }
 
 const noteSchema = z.object({

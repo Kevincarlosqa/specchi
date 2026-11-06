@@ -7,8 +7,8 @@ export function Footer({ branches, year, demo }: Pick<LandingData, "branches" | 
   return (
     <footer className="relative overflow-hidden bg-plum text-paper">
       <div className="mesh opacity-50" aria-hidden>
-        <i style={{ width: 520, height: 520, right: -140, top: -160, background: "#c2337a" }} />
-        <i style={{ width: 460, height: 460, left: -120, bottom: -200, background: "#6d4bd1", animationDelay: "-11s" }} />
+        <i style={{ width: 520, height: 520, right: -140, top: -160, color: "#c2337a" }} />
+        <i style={{ width: 460, height: 460, left: -120, bottom: -200, color: "#6d4bd1", animationDelay: "-11s" }} />
       </div>
       <div className="relative mx-auto max-w-[1320px] px-5 pt-24 pb-8 md:px-10">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_0.7fr]">

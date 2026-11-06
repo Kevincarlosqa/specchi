@@ -29,8 +29,8 @@ export function CatalogPage({ eyebrow, title, accent, intro, services, categorie
     <div>
       <header className={cn("relative overflow-hidden px-5 pt-36 pb-16 md:px-10 md:pt-44 md:pb-24", heroClass)}>
         <div className="mesh" aria-hidden>
-          <i style={{ width: "40vw", height: "40vw", right: "-8vw", top: "-14vw", background: "#cdb9f3", opacity: 0.7 }} />
-          <i style={{ width: "36vw", height: "36vw", left: "-8vw", bottom: "-18vw", background: "#ffbd99", opacity: 0.7, animationDelay: "-9s" }} />
+          <i style={{ width: "40vw", height: "40vw", right: "-8vw", top: "-14vw", color: "#cdb9f3", opacity: 0.7 }} />
+          <i style={{ width: "36vw", height: "36vw", left: "-8vw", bottom: "-18vw", color: "#ffbd99", opacity: 0.7, animationDelay: "-9s" }} />
         </div>
         <div className="relative mx-auto max-w-[1320px]">
           <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-rose uppercase">{eyebrow}</p>
@@ -40,8 +40,8 @@ export function CatalogPage({ eyebrow, title, accent, intro, services, categorie
       </header>
 
       <div className="sticky top-20 z-30 mx-auto max-w-[1320px] px-3 md:top-24 md:px-6">
-        <div className="flex flex-wrap items-center gap-2 rounded-[2rem] bg-paper/85 p-2 shadow-[0_16px_40px_-24px_rgba(61,22,54,.5)] backdrop-blur-xl">
-          <div className="scrollbar-none flex min-w-0 flex-1 gap-1 overflow-x-auto" role="tablist" aria-label="Categorías" data-lenis-prevent>
+        <div className="flex flex-wrap items-center gap-2 rounded-[2rem] bg-paper/95 p-2 shadow-[0_16px_40px_-24px_rgba(61,22,54,.5)]">
+          <div className="scrollbar-none flex min-w-0 flex-1 gap-1 overflow-x-auto overscroll-x-contain" role="tablist" aria-label="Categorías" data-lenis-prevent-horizontal>
             {(["ALL", ...categories] as const).map((c) => (
               <button key={c} role="tab" aria-selected={active === c} onClick={() => setActive(c)} className={cn("relative shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors", active === c ? "text-paper" : "text-ink-soft hover:text-ink")}>
                 {active === c ? <motion.span layoutId={`cat-${title}`} className="absolute inset-0 rounded-full bg-ink" transition={{ type: "spring", stiffness: 400, damping: 32 }} /> : null}
@@ -62,7 +62,7 @@ export function CatalogPage({ eyebrow, title, accent, intro, services, categorie
           <AnimatePresence mode="popLayout" initial={false}>
             {list.map((s) => (
               <motion.article key={s.id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} onPointerEnter={() => setHovered(s.category)} className="border-b border-ink/10">
-                <TLink href={`/reservar?servicio=${s.id}`} className="group grid grid-cols-[1fr_auto] items-center gap-4 py-5" data-cursor="Reservar">
+                <TLink href={`/reservar?servicio=${s.id}`} className="group grid grid-cols-[1fr_auto] items-center gap-4 py-5">
                   <div>
                     <p className="mb-1 flex flex-wrap items-center gap-x-3 text-[11px] font-semibold tracking-wider text-muted uppercase">
                       {CATEGORY_LABELS[s.category]}
